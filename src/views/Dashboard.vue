@@ -55,6 +55,7 @@ import SensorsCard from '@/components/widgets/sensors/SensorsCard.vue'
 import RunoutSensorsCard from '@/components/widgets/runout-sensors/RunoutSensorsCard.vue'
 import BeaconCard from '@/components/widgets/beacon/BeaconCard.vue'
 import AfcCard from '@/components/widgets/afc/AfcCard.vue'
+import AceProPanelCard from '@/components/widgets/ace/AceProPanelCard.vue'
 import type Sortable from 'sortablejs'
 
 @Component({
@@ -77,7 +78,8 @@ import type Sortable from 'sortablejs'
     SensorsCard,
     RunoutSensorsCard,
     BeaconCard,
-    AfcCard
+    AfcCard,
+    AceProPanelCard
   }
 })
 export default class Dashboard extends Mixins(StateMixin) {
