@@ -7,13 +7,30 @@
     :class="{ 'ace--narrow': narrow }"
   >
     <template #menu>
-      <v-icon :color="connColor" :title="connLabel" class="mr-2">{{ connIcon }}</v-icon>
-      <v-btn small text color="primary" :loading="busy" @click="resetIndex">Reset Index</v-btn>
+      <v-icon
+        :color="connColor"
+        :title="connLabel"
+        class="mr-2"
+      >
+        {{ connIcon }}
+      </v-icon>
+      <v-btn
+        small
+        text
+        color="primary"
+        :loading="busy"
+        @click="resetIndex"
+      >
+        Reset Index
+      </v-btn>
     </template>
 
     <v-card-text>
       <!-- ACE selector -->
-      <v-row dense class="mb-2">
+      <v-row
+        dense
+        class="mb-2"
+      >
         <v-col cols="12">
           <v-select
             v-model="selectedInstance"
@@ -21,7 +38,9 @@
             item-text="text"
             item-value="instance"
             label="ACE"
-            hide-details dense outlined
+            hide-details
+            dense
+            outlined
           />
         </v-col>
       </v-row>
@@ -34,7 +53,11 @@
 
       <!-- Slot grid (display 1-based, logic 0-based) -->
       <v-row dense>
-        <v-col v-for="item in inventory" :key="item.slot" cols="3">
+        <v-col
+          v-for="item in inventory"
+          :key="item.slot"
+          cols="3"
+        >
           <v-sheet
             rounded
             class="pa-3 text-center ace-slot d-flex flex-column align-center justify-center"
@@ -43,81 +66,289 @@
             @click="openSlot(item)"
           >
             <div class="text-caption ace-slot__top">
-              <span class="text--secondary">SLOT {{ item.slot + 1 }}</span><span class="ace-slot__sep text--secondary"> · </span><span class="font-weight-bold ace-slot__status" :class="slotStatusClass(item)">{{ slotStatusLabel(item) }}</span>
+              <span class="text--secondary">SLOT {{ item.slot + 1 }}</span><span class="ace-slot__sep text--secondary"> · </span><span
+                class="font-weight-bold ace-slot__status"
+                :class="slotStatusClass(item)"
+              >{{ slotStatusLabel(item) }}</span>
             </div>
             <div class="ace-spool my-2">
-              <div class="ace-spool__wound" :style="spoolWoundStyle(item)"></div>
-              <div class="ace-spool__hub"></div>
-              <v-chip v-if="item.rfid" x-small label color="cyan darken-3" class="ace-spool__rfid">RFID</v-chip>
+              <div
+                class="ace-spool__wound"
+                :style="spoolWoundStyle(item)"
+              />
+              <div class="ace-spool__hub" />
+              <v-chip
+                v-if="item.rfid"
+                x-small
+                label
+                color="cyan darken-3"
+                class="ace-spool__rfid"
+              >
+                RFID
+              </v-chip>
             </div>
-            <div class="font-weight-bold text-truncate" :class="{ 'text--disabled': !item.material }" :style="{ visibility: isEmptySlot(item) ? 'hidden' : 'visible' }">{{ slotLabel(item) }}</div>
-            <div class="text-caption text--secondary text-truncate ace-slot__weight" :style="{ visibility: hasWeight(item) ? 'visible' : 'hidden' }">{{ spoolWeightLabel(item) }}</div>
+            <div
+              class="font-weight-bold text-truncate"
+              :class="{ 'text--disabled': !item.material }"
+              :style="{ visibility: isEmptySlot(item) ? 'hidden' : 'visible' }"
+            >
+              {{ slotLabel(item) }}
+            </div>
+            <div
+              class="text-caption text--secondary text-truncate ace-slot__weight"
+              :style="{ visibility: hasWeight(item) ? 'visible' : 'hidden' }"
+            >
+              {{ spoolWeightLabel(item) }}
+            </div>
           </v-sheet>
         </v-col>
       </v-row>
 
       <!-- Filament path -->
-      <div v-if="hasFilamentPath" class="ace-path mt-6 px-6">
-        <div class="ace-step" :class="filamentStepClass(0)"><span class="ace-step__dot" /><span class="ace-step__label">Bowden</span></div>
-        <span class="ace-step__conn" :class="{ done: stepIndex > 0 }" />
-        <div class="ace-step" :class="filamentStepClass(1)"><span class="ace-step__dot" /><span class="ace-step__label">RDM</span></div>
-        <span class="ace-step__conn" :class="{ done: stepIndex > 1 }" />
-        <div class="ace-step" :class="filamentStepClass(2)"><span class="ace-step__dot" /><span class="ace-step__label">Toolhead</span></div>
-        <span class="ace-step__conn" :class="{ done: stepIndex > 2 }" />
-        <div class="ace-step" :class="filamentStepClass(3)"><span class="ace-step__dot" /><span class="ace-step__label">Nozzle</span></div>
+      <div
+        v-if="hasFilamentPath"
+        class="ace-path mt-6 px-6"
+      >
+        <div
+          class="ace-step"
+          :class="filamentStepClass(0)"
+        >
+          <span class="ace-step__dot" /><span class="ace-step__label">Bowden</span>
+        </div>
+        <span
+          class="ace-step__conn"
+          :class="{ done: stepIndex > 0 }"
+        />
+        <div
+          class="ace-step"
+          :class="filamentStepClass(1)"
+        >
+          <span class="ace-step__dot" /><span class="ace-step__label">RDM</span>
+        </div>
+        <span
+          class="ace-step__conn"
+          :class="{ done: stepIndex > 1 }"
+        />
+        <div
+          class="ace-step"
+          :class="filamentStepClass(2)"
+        >
+          <span class="ace-step__dot" /><span class="ace-step__label">Toolhead</span>
+        </div>
+        <span
+          class="ace-step__conn"
+          :class="{ done: stepIndex > 2 }"
+        />
+        <div
+          class="ace-step"
+          :class="filamentStepClass(3)"
+        >
+          <span class="ace-step__dot" /><span class="ace-step__label">Nozzle</span>
+        </div>
       </div>
-
 
       <v-divider class="my-3" />
 
       <!-- Dryer + Manual Feed -->
       <div class="d-flex">
         <!-- Dryer -->
-        <div class="flex-grow-1 pr-3" style="flex-basis:0">
-          <div class="text-caption text--secondary mb-1">DRYER</div>
-          <div class="d-flex align-center mb-2" style="height:44px">
-            <div class="text-center mr-2 d-flex flex-column justify-center" style="flex:0 0 68px;height:44px">
-              <div class="text-caption text--secondary" style="line-height:1.1">CHAMBER</div>
-              <div class="text-subtitle-2 font-weight-medium" style="line-height:1.1">{{ chamberTemp }}°C</div>
+        <div
+          class="flex-grow-1 pr-3"
+          style="flex-basis:0"
+        >
+          <div class="text-caption text--secondary mb-1">
+            DRYER
+          </div>
+          <div
+            class="d-flex align-center mb-2"
+            style="height:44px"
+          >
+            <div
+              class="text-center mr-2 d-flex flex-column justify-center"
+              style="flex:0 0 68px;height:44px"
+            >
+              <div
+                class="text-caption text--secondary"
+                style="line-height:1.1"
+              >
+                CHAMBER
+              </div>
+              <div
+                class="text-subtitle-2 font-weight-medium"
+                style="line-height:1.1"
+              >
+                {{ chamberTemp }}°C
+              </div>
             </div>
             <div class="flex-grow-1">
-              <v-select v-model="dryerTemp" :items="tempOptions" label="Temp °C" hide-details dense outlined />
+              <v-select
+                v-model="dryerTemp"
+                :items="tempOptions"
+                label="Temp °C"
+                hide-details
+                dense
+                outlined
+              />
             </div>
           </div>
-          <div class="d-flex align-center mb-2" style="height:44px">
-            <div class="text-center mr-2 d-flex flex-column justify-center" style="flex:0 0 68px;height:44px">
+          <div
+            class="d-flex align-center mb-2"
+            style="height:44px"
+          >
+            <div
+              class="text-center mr-2 d-flex flex-column justify-center"
+              style="flex:0 0 68px;height:44px"
+            >
               <template v-if="dryer.is_drying">
-                <v-chip x-small label color="orange" text-color="black" class="font-weight-bold mx-auto">DRYING</v-chip>
-                <div class="text-caption font-weight-bold" style="line-height:1.1">{{ remainingLabel }}</div>
+                <v-chip
+                  x-small
+                  label
+                  color="orange"
+                  text-color="black"
+                  class="font-weight-bold mx-auto"
+                >
+                  DRYING
+                </v-chip>
+                <div
+                  class="text-caption font-weight-bold"
+                  style="line-height:1.1"
+                >
+                  {{ remainingLabel }}
+                </div>
               </template>
-              <v-chip v-else x-small label color="blue-grey darken-1" text-color="white" class="font-weight-bold mx-auto">IDLE</v-chip>
+              <v-chip
+                v-else
+                x-small
+                label
+                color="blue-grey darken-1"
+                text-color="white"
+                class="font-weight-bold mx-auto"
+              >
+                IDLE
+              </v-chip>
             </div>
             <div class="flex-grow-1">
-              <v-select v-model="dryerDuration" :items="durationOptions" label="Duration min" hide-details dense outlined />
+              <v-select
+                v-model="dryerDuration"
+                :items="durationOptions"
+                label="Duration min"
+                hide-details
+                dense
+                outlined
+              />
             </div>
           </div>
-          <v-btn v-if="dryer.is_drying" block height="40" color="red" dark :loading="busy" @click="stopDryer">STOP DRYING</v-btn>
-          <v-btn v-else block height="40" color="primary" :loading="busy" @click="startDryer">START DRYING</v-btn>
+          <v-btn
+            v-if="dryer.is_drying"
+            block
+            height="40"
+            color="red"
+            dark
+            :loading="busy"
+            @click="stopDryer"
+          >
+            STOP DRYING
+          </v-btn>
+          <v-btn
+            v-else
+            block
+            height="40"
+            color="primary"
+            :loading="busy"
+            @click="startDryer"
+          >
+            START DRYING
+          </v-btn>
         </div>
 
         <v-divider vertical />
 
         <!-- Manual Feed -->
-        <div class="flex-grow-1 pl-3" style="flex-basis:0">
-          <div class="text-caption text--secondary mb-1">MANUAL FEED</div>
-          <div class="d-flex align-center mb-2" style="height:44px">
-            <v-select v-model="feedSlot" :items="slotChoices" item-text="text" item-value="value" label="Slot" hide-details dense outlined class="flex-grow-1" />
+        <div
+          class="flex-grow-1 pl-3"
+          style="flex-basis:0"
+        >
+          <div class="text-caption text--secondary mb-1">
+            MANUAL FEED
           </div>
-          <div class="d-flex align-center mb-2" style="height:44px">
-            <v-row dense style="width:100%">
-              <v-col cols="6"><v-text-field v-model.number="feedLength" type="number" label="mm" hide-details dense outlined /></v-col>
-              <v-col cols="6"><v-text-field v-model.number="feedSpeed" type="number" label="mm/s" hide-details dense outlined /></v-col>
+          <div
+            class="d-flex align-center mb-2"
+            style="height:44px"
+          >
+            <v-select
+              v-model="feedSlot"
+              :items="slotChoices"
+              item-text="text"
+              item-value="value"
+              label="Slot"
+              hide-details
+              dense
+              outlined
+              class="flex-grow-1"
+            />
+          </div>
+          <div
+            class="d-flex align-center mb-2"
+            style="height:44px"
+          >
+            <v-row
+              dense
+              style="width:100%"
+            >
+              <v-col cols="6">
+                <v-text-field
+                  v-model.number="feedLength"
+                  type="number"
+                  label="mm"
+                  hide-details
+                  dense
+                  outlined
+                />
+              </v-col>
+              <v-col cols="6">
+                <v-text-field
+                  v-model.number="feedSpeed"
+                  type="number"
+                  label="mm/s"
+                  hide-details
+                  dense
+                  outlined
+                />
+              </v-col>
             </v-row>
           </div>
-          <div class="d-flex align-center" style="gap:6px">
-            <v-btn height="40" color="primary" :loading="busy" class="flex-grow-1" @click="move('FEED')">Feed</v-btn>
-            <v-btn height="40" outlined color="red" min-width="56" @click="stopFeedRetract">Stop</v-btn>
-            <v-btn height="40" color="orange darken-2" dark :loading="busy" class="flex-grow-1" @click="move('RETRACT')">Retract</v-btn>
+          <div
+            class="d-flex align-center"
+            style="gap:6px"
+          >
+            <v-btn
+              height="40"
+              color="primary"
+              :loading="busy"
+              class="flex-grow-1"
+              @click="move('FEED')"
+            >
+              Feed
+            </v-btn>
+            <v-btn
+              height="40"
+              outlined
+              color="red"
+              min-width="56"
+              @click="stopFeedRetract"
+            >
+              Stop
+            </v-btn>
+            <v-btn
+              height="40"
+              color="orange darken-2"
+              dark
+              :loading="busy"
+              class="flex-grow-1"
+              @click="move('RETRACT')"
+            >
+              Retract
+            </v-btn>
           </div>
         </div>
       </div>
@@ -127,27 +358,77 @@
       <!-- Tangle Detection | Endless Spool | Spoolman -->
       <div class="d-flex">
         <!-- Tangle Detection -->
-        <div class="flex-grow-1 pr-3 d-flex flex-column align-center justify-center" style="flex-basis:0">
-          <v-switch :input-value="tangleDetection" label="Tangle Detection" hide-details dense class="mt-0" @change="onTangleToggle" />
+        <div
+          class="flex-grow-1 pr-3 d-flex flex-column align-center justify-center"
+          style="flex-basis:0"
+        >
+          <v-switch
+            :input-value="tangleDetection"
+            label="Tangle Detection"
+            hide-details
+            dense
+            class="mt-0"
+            @change="onTangleToggle"
+          />
         </div>
 
         <v-divider vertical />
 
         <!-- Endless Spool -->
-        <div class="flex-grow-1 px-3 d-flex flex-column align-center justify-center" style="flex-basis:0">
-          <v-switch v-model="endlessSpoolOn" label="Endless Spool" hide-details dense class="mt-0" />
-          <v-btn-toggle v-model="endlessModeModel" dense mandatory color="primary" :disabled="!endlessSpoolOn" class="mt-2">
-            <v-btn x-small value="exact">Exact</v-btn>
-            <v-btn x-small value="material">Material</v-btn>
-            <v-btn x-small value="next">Next</v-btn>
+        <div
+          class="flex-grow-1 px-3 d-flex flex-column align-center justify-center"
+          style="flex-basis:0"
+        >
+          <v-switch
+            v-model="endlessSpoolOn"
+            label="Endless Spool"
+            hide-details
+            dense
+            class="mt-0"
+          />
+          <v-btn-toggle
+            v-model="endlessModeModel"
+            dense
+            mandatory
+            color="primary"
+            :disabled="!endlessSpoolOn"
+            class="mt-2"
+          >
+            <v-btn
+              x-small
+              value="exact"
+            >
+              Exact
+            </v-btn>
+            <v-btn
+              x-small
+              value="material"
+            >
+              Material
+            </v-btn>
+            <v-btn
+              x-small
+              value="next"
+            >
+              Next
+            </v-btn>
           </v-btn-toggle>
         </div>
 
         <v-divider vertical />
 
         <!-- Spoolman -->
-        <div class="flex-grow-1 pl-3 d-flex flex-column align-center justify-center" style="flex-basis:0">
-          <v-switch v-model="spoolmanSync" label="Spoolman sync" hide-details dense class="mt-0" />
+        <div
+          class="flex-grow-1 pl-3 d-flex flex-column align-center justify-center"
+          style="flex-basis:0"
+        >
+          <v-switch
+            v-model="spoolmanSync"
+            label="Spoolman sync"
+            hide-details
+            dense
+            class="mt-0"
+          />
         </div>
       </div>
     </v-card-text>
@@ -160,12 +441,17 @@
       @save="saveSlot"
       @cancel="slotDialog = false"
     >
-      <v-card-text v-if="dialogSlot" class="pt-4">
+      <v-card-text
+        v-if="dialogSlot"
+        class="pt-4"
+      >
         <v-select
           v-model="editMaterial"
           :items="materialOptions"
           label="Material Type"
-          outlined dense hide-details
+          outlined
+          dense
+          hide-details
           @change="onMaterialChange"
         />
 
@@ -173,26 +459,104 @@
           <span class="text--secondary">Print Temp</span>
           <span class="primary--text font-weight-medium">{{ editTemp }}°C</span>
         </div>
-        <v-slider v-model="editTemp" :min="150" :max="320" :step="5" color="primary" hide-details />
+        <v-slider
+          v-model="editTemp"
+          :min="150"
+          :max="320"
+          :step="5"
+          color="primary"
+          hide-details
+        />
 
         <v-divider class="my-3" />
 
         <div class="d-flex justify-center">
-          <app-iro-color-picker v-model="editColorHex" :options="colorPickerOptions" />
+          <app-iro-color-picker
+            v-model="editColorHex"
+            :options="colorPickerOptions"
+          />
         </div>
 
         <v-divider class="my-3" />
 
-        <div class="text-caption text--secondary mb-2">HARDWARE ACTIONS</div>
+        <div class="text-caption text--secondary mb-2">
+          HARDWARE ACTIONS
+        </div>
         <v-row dense>
-          <v-col cols="4"><v-btn block small color="primary" :loading="busy" @click="slotAction('LOAD')">Load</v-btn></v-col>
-          <v-col cols="4"><v-btn block small color="orange darken-1" dark :loading="busy" @click="slotAction('PARK')">Park</v-btn></v-col>
-          <v-col cols="4"><v-btn block small color="primary" outlined :loading="busy" @click="slotAction('UNLOAD_SPOOL')">Full Unload</v-btn></v-col>
+          <v-col cols="4">
+            <v-btn
+              block
+              small
+              color="primary"
+              :loading="busy"
+              @click="slotAction('LOAD')"
+            >
+              Load
+            </v-btn>
+          </v-col>
+          <v-col cols="4">
+            <v-btn
+              block
+              small
+              color="orange darken-1"
+              dark
+              :loading="busy"
+              @click="slotAction('PARK')"
+            >
+              Park
+            </v-btn>
+          </v-col>
+          <v-col cols="4">
+            <v-btn
+              block
+              small
+              color="primary"
+              outlined
+              :loading="busy"
+              @click="slotAction('UNLOAD_SPOOL')"
+            >
+              Full Unload
+            </v-btn>
+          </v-col>
         </v-row>
-        <v-row dense class="mt-1">
-          <v-col cols="4"><v-btn block small color="primary" :loading="busy" @click="slotAction('ASSIST')">Assist</v-btn></v-col>
-          <v-col cols="4"><v-btn block small color="error" :loading="busy" @click="slotAction('DISABLE_ASSIST')">Disable</v-btn></v-col>
-          <v-col cols="4"><v-btn block small text color="grey" :loading="busy" @click="clearSlot">Clear Slot</v-btn></v-col>
+        <v-row
+          dense
+          class="mt-1"
+        >
+          <v-col cols="4">
+            <v-btn
+              block
+              small
+              color="primary"
+              :loading="busy"
+              @click="slotAction('ASSIST')"
+            >
+              Assist
+            </v-btn>
+          </v-col>
+          <v-col cols="4">
+            <v-btn
+              block
+              small
+              color="error"
+              :loading="busy"
+              @click="slotAction('DISABLE_ASSIST')"
+            >
+              Disable
+            </v-btn>
+          </v-col>
+          <v-col cols="4">
+            <v-btn
+              block
+              small
+              text
+              color="grey"
+              :loading="busy"
+              @click="clearSlot"
+            >
+              Clear Slot
+            </v-btn>
+          </v-col>
         </v-row>
       </v-card-text>
     </app-dialog>
@@ -296,12 +660,15 @@ export default class AceProPanelCard extends Vue {
 
   get connLabel (): string {
     const map: Record<string, string> = {
-      connected: 'Connected', connecting: 'Connecting…', reconnecting: 'Reconnecting…',
-      initializing: 'Init…', disconnect: 'Disconnected', disabled: 'Off'
+      connected: 'Connected',
+      connecting: 'Connecting…',
+      reconnecting: 'Reconnecting…',
+      initializing: 'Init…',
+      disconnect: 'Disconnected',
+      disabled: 'Off'
     }
     return map[this.connState] || (this.connState || '–')
   }
-
 
   // ---- Endless Spool (store-bound) ----
   get endlessSpoolOn (): boolean { return Boolean(this.aceState.endless_spool_enabled) }
@@ -382,7 +749,7 @@ export default class AceProPanelCard extends Vue {
           const total = Number(spool.filament && spool.filament.raw_material_weight_g) || remaining
           next[id] = { remaining, total }
         }
-      } catch (_) { /* FilaMan offline / proxy error -> keep ACE fallback */ }
+      } catch { /* FilaMan offline / proxy error -> keep ACE fallback */ }
     }))
     this.filamanWeights = next
   }
@@ -549,8 +916,8 @@ export default class AceProPanelCard extends Vue {
 
   // Stop whichever motion is running (feed or retract).
   async stopFeedRetract () {
-    try { await this.api.stopMove('FEED', this.selectedInstance, this.feedSlot) } catch (_) { /* ignore */ }
-    try { await this.api.stopMove('RETRACT', this.selectedInstance, this.feedSlot) } catch (_) { /* ignore */ }
+    try { await this.api.stopMove('FEED', this.selectedInstance, this.feedSlot) } catch { /* ignore */ }
+    try { await this.api.stopMove('RETRACT', this.selectedInstance, this.feedSlot) } catch { /* ignore */ }
   }
 
   onTangleToggle (v: boolean) {

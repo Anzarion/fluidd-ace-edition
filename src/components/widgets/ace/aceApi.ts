@@ -8,8 +8,15 @@ const CONFIG = {
   durationOptions: [30, 60, 90, 120, 150, 180, 210, 240],
   materialOptions: ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'NYLON', 'PC', 'empty'],
   materialDefaults: {
-    PLA: 220, 'PLA+': 210, PETG: 250, ABS: 250, ASA: 260,
-    TPU: 230, NYLON: 250, PC: 280, empty: 0
+    PLA: 220,
+    'PLA+': 210,
+    PETG: 250,
+    ABS: 250,
+    ASA: 260,
+    TPU: 230,
+    NYLON: 250,
+    PC: 280,
+    empty: 0
   },
   endpoints: {
     objectQuery: '/printer/objects/query',
@@ -19,27 +26,30 @@ const CONFIG = {
   }
 }
 
-const api = {
+// Dynamic glue to Moonraker/ACE: the typed boundary is the panel, so the api
+// object itself is intentionally loosely typed (any) - it shovels JSON payloads.
+const api: any = {
   config: CONFIG,
 
   getConfig () { return JSON.parse(JSON.stringify(CONFIG)) },
   getTempOptions () { return [...CONFIG.tempOptions] },
   getDurationOptions () { return [...CONFIG.durationOptions] },
   getMaterialOptions () { return [...CONFIG.materialOptions] },
-  getMaterialDefaultTemp (material) {
+  getMaterialDefaultTemp (material: any) {
     const key = String(material || '')
-    return CONFIG.materialDefaults[key.toUpperCase()] ?? CONFIG.materialDefaults[key] ?? 220
+    const md = CONFIG.materialDefaults as Record<string, number>
+    return md[key.toUpperCase()] ?? md[key] ?? 220
   },
-  getAceLabel (instance) { return `${CONFIG.aceLabelPrefix} ${(Number(instance) || 0) + 1}` },
-  getAceValue (instance) { return `ace${(Number(instance) || 0) + 1}` },
+  getAceLabel (instance: number) { return `${CONFIG.aceLabelPrefix} ${(Number(instance) || 0) + 1}` },
+  getAceValue (instance: number) { return `ace${(Number(instance) || 0) + 1}` },
 
-  async request (path, options = {}) {
+  async request (path: string, options: RequestInit = {}) {
     const response = await fetch(path, options)
     if (!response.ok) throw new Error(`ACE_UI request failed ${response.status}: ${path}`)
-    try { return await response.json() } catch (_) { return {} }
+    try { return await response.json() } catch { return {} }
   },
 
-  async queryObjects (extraObjects = []) {
+  async queryObjects (extraObjects: string[] = []) {
     const objects = [
       'save_variables', 'ace',
       'temperature_sensor ace_temp_0', 'temperature_sensor ace_temp_1',
@@ -54,7 +64,7 @@ const api = {
     return this.request(`${CONFIG.endpoints.objectQuery}?${query}`)
   },
 
-  async sendGcode (script) {
+  async sendGcode (script: string) {
     return this.request(CONFIG.endpoints.gcodeScript, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -62,11 +72,11 @@ const api = {
     })
   },
 
-  async getAceStatus (instance) {
+  async getAceStatus (instance: number) {
     return this.request(`${CONFIG.endpoints.aceStatus}?instance=${Number(instance) || 0}`)
   },
 
-  async fetchStatusSnapshot (instance = 0, extraObjects = []) {
+  async fetchStatusSnapshot (instance: number = 0, extraObjects: string[] = []) {
     const selectedInstance = Number(instance) || 0
     const [objectsPayload, acePayload] = await Promise.allSettled([
       this.queryObjects(extraObjects),
@@ -87,16 +97,16 @@ const api = {
     }
   },
 
-  normalizeResult (payload) { return payload && payload.result ? payload.result : payload },
-  getSaveVariables (payload) {
+  normalizeResult (payload: any) { return payload && payload.result ? payload.result : payload },
+  getSaveVariables (payload: any) {
     const status = this.normalizeResult(payload)?.status || {}
     return status.save_variables?.variables || {}
   },
 
   // Parse a Klipper save_variables value (JSON or Python repr); raw value on failure.
-  parseMaybe (value) {
+  parseMaybe (value: any) {
     if (typeof value !== 'string') return value
-    try { return JSON.parse(value) } catch (_) {}
+    try { return JSON.parse(value) } catch {}
     try {
       const normalized = value
         .replace(/\bTrue\b/g, 'true')
@@ -104,19 +114,19 @@ const api = {
         .replace(/\bNone\b/g, 'null')
         .replace(/'/g, '"')
       return JSON.parse(normalized)
-    } catch (_) { return value }
+    } catch { return value }
   },
 
-  getInventoryKeys (saveVars) {
+  getInventoryKeys (saveVars: any) {
     return Object.keys(saveVars || {})
       .filter((key) => /^ace_inventory_\d+$/.test(key))
       .sort((a, b) => Number(a.split('_').pop()) - Number(b.split('_').pop()))
   },
 
-  getAceOptions (saveVars) {
+  getAceOptions (saveVars: any) {
     const keys = this.getInventoryKeys(saveVars)
     if (keys.length > 0) {
-      return keys.map((key) => {
+      return keys.map((key: string) => {
         const idx = Number(key.split('_').pop())
         return { text: this.getAceLabel(idx), value: this.getAceValue(idx), instance: idx, key }
       })
@@ -124,26 +134,26 @@ const api = {
     return [{ text: this.getAceLabel(0), value: this.getAceValue(0), instance: 0, key: 'ace_inventory_0' }]
   },
 
-  normalizeColor (color) {
+  normalizeColor (color: any) {
     if (Array.isArray(color)) return color.slice(0, 3).map((v) => Math.max(0, Math.min(255, Number(v) || 0)))
     if (typeof color === 'string') {
-      const parts = color.split(',').map((v) => Number(v.trim()))
-      if (parts.length >= 3 && parts.every((v) => Number.isFinite(v))) {
-        return parts.slice(0, 3).map((v) => Math.max(0, Math.min(255, v)))
+      const parts = color.split(',').map((v: string) => Number(v.trim()))
+      if (parts.length >= 3 && parts.every((v: number) => Number.isFinite(v))) {
+        return parts.slice(0, 3).map((v: number) => Math.max(0, Math.min(255, v)))
       }
     }
     return [120, 120, 120]
   },
 
   // Spool id from a SKU: a whole-numeric SKU, or the trailing segment of VENDOR-MATERIAL-SPOOLID.
-  parseSpoolId (sku) {
+  parseSpoolId (sku: any) {
     const s = String(sku == null ? '' : sku).trim()
     if (/^\d+$/.test(s)) return Number(s)
     const tail = s.split('-').pop()
     return tail && /^\d+$/.test(tail) ? Number(tail) : null
   },
 
-  normalizeInventoryItem (item, slot = 0, instance = 0) {
+  normalizeInventoryItem (item: any, slot = 0, instance = 0) {
     const src = item && typeof item === 'object' ? item : {}
     const material = src.material || src.type || 'empty'
     const sku = src.sku != null ? String(src.sku).trim() : ''
@@ -164,7 +174,7 @@ const api = {
     }
   },
 
-  getInventoryForInstance (saveVars, instance = 0) {
+  getInventoryForInstance (saveVars: any, instance = 0) {
     const idx = Number(instance) || 0
     let raw = this.parseMaybe(saveVars?.[`ace_inventory_${idx}`])
     if (!Array.isArray(raw) && idx === 0) raw = this.parseMaybe(saveVars?.ace_inventory)
@@ -172,25 +182,25 @@ const api = {
     return Array.from({ length: CONFIG.slotsPerAce }, (_, slot) => this.normalizeInventoryItem(raw[slot], slot, idx))
   },
 
-  getAllInventories (saveVars) {
-    return this.getAceOptions(saveVars).map((opt) => ({
+  getAllInventories (saveVars: any) {
+    return this.getAceOptions(saveVars).map((opt: any) => ({
       ...opt,
       inventory: this.getInventoryForInstance(saveVars, opt.instance)
     }))
   },
 
-  getCurrentTool (saveVars) {
+  getCurrentTool (saveVars: any) {
     const idx = Number(saveVars?.ace_current_index)
     return Number.isInteger(idx) && idx >= 0 ? idx : -1
   },
 
-  getToolMapping (globalTool) {
+  getToolMapping (globalTool: number) {
     const tool = Number(globalTool)
     if (!Number.isInteger(tool) || tool < 0) return { tool: -1, instance: -1, slot: -1 }
     return { tool, instance: Math.floor(tool / CONFIG.slotsPerAce), slot: tool % CONFIG.slotsPerAce }
   },
 
-  getCurrentToolInfo (saveVars) {
+  getCurrentToolInfo (saveVars: any) {
     const tool = this.getCurrentTool(saveVars)
     const map = this.getToolMapping(tool)
     if (tool < 0) return { tool: -1, instance: -1, slot: -1, item: null }
@@ -198,7 +208,7 @@ const api = {
     return { ...map, item: inv[map.slot] || null }
   },
 
-  getInventoryInfo (saveVars) {
+  getInventoryInfo (saveVars: any) {
     const aceOptions = this.getAceOptions(saveVars)
     const current = this.getCurrentToolInfo(saveVars)
     return {
@@ -210,14 +220,14 @@ const api = {
     }
   },
 
-  getSpoolIdForTool (saveVars, globalTool) {
+  getSpoolIdForTool (saveVars: any, globalTool: number) {
     const { instance, slot } = this.getToolMapping(globalTool)
     if (instance < 0 || slot < 0) return null
     return this.getInventoryForInstance(saveVars, instance)[slot]?.spoolId || null
   },
 
   // Fetch one FilaMan spool via the Moonraker proxy. Returns the spool object or null.
-  async fetchFilamanSpool (spoolId) {
+  async fetchFilamanSpool (spoolId: any) {
     const id = Number(spoolId)
     if (!Number.isInteger(id) || id <= 0) return null
     const payload = await this.request(CONFIG.endpoints.filamanProxy, {
@@ -229,7 +239,7 @@ const api = {
   },
 
   // Set Spoolman's active spool from the current tool. Returns { changed }.
-  async syncSpoolmanActiveFromSaveVars (saveVars, state = {}) {
+  async syncSpoolmanActiveFromSaveVars (saveVars: any, state: any = {}) {
     const current = this.getCurrentTool(saveVars)
     if (!Number.isInteger(current) || current < 0) return { changed: false, reason: 'no-active-tool', state }
     const spoolId = this.getSpoolIdForTool(saveVars, current)
@@ -244,7 +254,7 @@ const api = {
     return { changed: true, tool: current, spoolId, state }
   },
 
-  async startDryer (instance, temp, duration, localDryers) {
+  async startDryer (instance: number, temp: number, duration: number, localDryers: any) {
     const aceInstance = Number(instance) || 0
     const target = Number(temp)
     const minutes = Number(duration)
@@ -255,18 +265,18 @@ const api = {
     return { instance: aceInstance, temp: target, duration: minutes, started: true }
   },
 
-  async stopDryer (instance, localDryers) {
+  async stopDryer (instance: number, localDryers: any) {
     const aceInstance = Number(instance) || 0
     await this.sendGcode(`ACE_STOP_DRYING INSTANCE=${aceInstance}`)
     if (localDryers) delete localDryers[aceInstance]
     return { instance: aceInstance, stopped: true }
   },
 
-  async runSlotAction (action, instance, slot) {
+  async runSlotAction (action: string, instance: number, slot: number) {
     const aceInstance = Number(instance) || 0
     const index = Number(slot) || 0
     const tool = aceInstance * CONFIG.slotsPerAce + index
-    const commands = {
+    const commands: Record<string, string> = {
       LOAD: `ACE_CHANGE_TOOL TOOL=${tool}`,
       PARK: `ACE_SMART_UNLOAD TOOL=${tool}`,
       UNLOAD_SPOOL: `ACE_FULL_UNLOAD TOOL=${tool}`,
@@ -279,7 +289,7 @@ const api = {
     return { action, instance: aceInstance, slot: index, tool, script: gcode }
   },
 
-  async executeMove (type, instance, slot, length, speed) {
+  async executeMove (type: string, instance: number, slot: number, length: number, speed: number) {
     const aceInstance = Number(instance) || 0
     const index = Number(slot) || 0
     const command = type === 'FEED' ? 'ACE_FEED' : 'ACE_RETRACT'
@@ -288,7 +298,7 @@ const api = {
     return { type, instance: aceInstance, slot: index, length: Number(length), speed: Number(speed), script: gcode }
   },
 
-  async stopMove (type, instance, slot) {
+  async stopMove (type: string, instance: number, slot: number) {
     const aceInstance = Number(instance) || 0
     const index = Number(slot) || 0
     const cmd = type === 'FEED' ? 'ACE_STOP_FEED' : 'ACE_STOP_RETRACT'
@@ -301,44 +311,44 @@ const api = {
     return { smartLoad: true }
   },
 
-  async resetActiveToolhead (instance) {
+  async resetActiveToolhead (instance: number) {
     const aceInstance = Number(instance) || 0
     await this.sendGcode(`ACE_RESET_ACTIVE_TOOLHEAD INSTANCE=${aceInstance}`)
     return { instance: aceInstance }
   },
 
-  async clearSlot (instance, slot) {
+  async clearSlot (instance: number, slot: number) {
     const aceInstance = Number(instance) || 0
     const index = Number(slot) || 0
     await this.sendGcode(`ACE_SET_SLOT INSTANCE=${aceInstance} INDEX=${index} EMPTY=1`)
     return { instance: aceInstance, slot: index, empty: true }
   },
 
-  async setEndlessSpool (enabled) {
+  async setEndlessSpool (enabled: boolean) {
     await this.sendGcode(enabled ? 'ACE_ENABLE_ENDLESS_SPOOL' : 'ACE_DISABLE_ENDLESS_SPOOL')
     return { enabled: !!enabled }
   },
 
-  async setEndlessSpoolMode (mode) {
+  async setEndlessSpoolMode (mode: string) {
     const valid = ['exact', 'material', 'next']
     const safe = valid.includes(String(mode).toLowerCase()) ? String(mode).toLowerCase() : 'exact'
     await this.sendGcode(`ACE_SET_ENDLESS_SPOOL_MODE MODE=${safe}`)
     return { mode: safe }
   },
 
-  async setTangleDetection (enabled) {
+  async setTangleDetection (enabled: boolean) {
     await this.sendGcode(`ACE_TANGLE_DETECTION ENABLE=${enabled ? 1 : 0}`)
     return { enabled: !!enabled }
   },
 
-  normalizeRgb (rgb) {
+  normalizeRgb (rgb: any) {
     if (Array.isArray(rgb)) return rgb.slice(0, 3).map((v) => Math.max(0, Math.min(255, Number(v) || 0))).join(',')
     if (rgb && typeof rgb === 'object') return [rgb.r, rgb.g, rgb.b].map((v) => Math.max(0, Math.min(255, Number(v) || 0))).join(',')
     return String(rgb || '0,0,0').replace(/^"|"$/g, '')
   },
 
   // MATERIAL is clamped to the known option set (g-code injection guard).
-  async saveSlot (instance, slot, material, temp, rgb) {
+  async saveSlot (instance: number, slot: number, material: any, temp: number, rgb: any) {
     const aceInstance = Number(instance) || 0
     const index = Number(slot) || 0
     const color = this.normalizeRgb(rgb)
@@ -351,7 +361,7 @@ const api = {
 
   // Normalize the dryer object; remain_time is in seconds. localDryer is a
   // client-side fallback used when the unit reports a stopped dryer.
-  normalizeDryer (raw, selectedDuration = 0, localDryer = null) {
+  normalizeDryer (raw: any, selectedDuration: number = 0, localDryer: any = null) {
     let dryer = raw && typeof raw === 'object' ? { ...raw } : { status: 'stop', remain_time: 0 }
     if ((dryer.status === 'stop' || dryer.status === undefined) && localDryer?.end_time) {
       const fallbackSeconds = Math.max(0, Math.floor((localDryer.end_time - Date.now()) / 1000))
@@ -369,7 +379,7 @@ const api = {
     }
   },
 
-  formatRemainingMinutes (minutes) {
+  formatRemainingMinutes (minutes: number) {
     const value = Math.max(0, Math.floor(Number(minutes) || 0))
     const hours = Math.floor(value / 60)
     const mins = value % 60
